@@ -3,7 +3,7 @@ name: Sucuri Geo Block Scheduler
 on:
   schedule:
     # Runs at 3:30 PM UTC every day (adjust cron as needed)
-    - cron: "30 15 * * *"
+    - cron: "10 14 * * *"
     # Runs at 3:45 PM UTC every day (unblock)
     - cron: "45 15 * * *"
   workflow_dispatch: # allows manual trigger
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Block US (3:30)
-        if: github.event.schedule == '08 14 * * *'
+        if: github.event.schedule == '10 14 * * *'
         run: |
           curl -X POST https://waf.sucuri.net/api?v2 \
           -d "k=${{ secrets.SUCURI_API_KEY }}" \
