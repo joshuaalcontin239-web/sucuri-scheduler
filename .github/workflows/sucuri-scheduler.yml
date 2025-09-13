@@ -1,0 +1,30 @@
+name: Sucuri Scheduler
+
+on:
+  schedule:
+    # Run every hour (adjust as needed)
+    - cron: "0 * * * *"
+  workflow_dispatch: # allows you to trigger manually from GitHub UI
+
+jobs:
+  run-sucuri-api:
+    runs-on: ubuntu-latest
+
+    env:
+      SUCURI_API_KEY: ${{ secrets.SUCURI_API_KEY }}
+      SUCURI_API_SECRET: ${{ secrets.SUCURI_API_SECRET }}
+      SUCURI_API_URL: "https://waf.sucuri.net/api?v2" # Example endpoint, replace with yours
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run Sucuri API Request
+        run: |
+          echo "Calling Sucuri API..."
+          RESPONSE=$(curl -s -X POST "$SUCURI_API_URL" \
+            -d "k=$SUCURI_API_KEY" \
+            -d "s=$SUCURI_API_SECRET" \
+            -d "a=clear_cache" \
+          )
+          echo "Response: $RESPONSE"
