@@ -1,30 +1,33 @@
-name: Sucuri Scheduler
+name: Sucuri Geo Block Scheduler
 
 on:
   schedule:
-    # Run every hour (adjust as needed)
-    - cron: "0 * * * *"
-  workflow_dispatch: # allows you to trigger manually from GitHub UI
+    # Runs at 3:30 PM UTC every day (adjust cron as needed)
+    - cron: "30 15 * * *"
+    # Runs at 3:45 PM UTC every day (unblock)
+    - cron: "45 15 * * *"
+  workflow_dispatch: # allows manual trigger
 
 jobs:
-  run-sucuri-api:
+  sucuri:
     runs-on: ubuntu-latest
-
-    env:
-      SUCURI_API_KEY: ${{ secrets.SUCURI_API_KEY }}
-      SUCURI_API_SECRET: ${{ secrets.SUCURI_API_SECRET }}
-      SUCURI_API_URL: "https://waf.sucuri.net/api?v2" # Example endpoint, replace with yours
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Run Sucuri API Request
+      - name: Block US (3:30)
+        if: github.event.schedule == '08 14 * * *'
         run: |
-          echo "Calling Sucuri API..."
-          RESPONSE=$(curl -s -X POST "$SUCURI_API_URL" \
-            -d "k=$SUCURI_API_KEY" \
-            -d "s=$SUCURI_API_SECRET" \
-            -d "a=clear_cache" \
-          )
-          echo "Response: $RESPONSE"
+          curl -X POST https://waf.sucuri.net/api?v2 \
+          -d "k=${{ secrets.SUCURI_API_KEY }}" \
+          -d "s=${{ secrets.SUCURI_API_SECRET }}" \
+          -d "a=update_setting" \
+          -d "block_from_viewing[]=US" \
+          -d "block_from_posting[]=US" \
+          -d "update_geo_blocking=1"
+
+      - name: Unblock US (3:45)
+        if: github.event.schedule == '45 15 * * *'
+        run: |
+          curl -X POST https://waf.sucuri.net/api?v2 \
+          -d "k=${{ secrets.SUCURI_API_KEY }}" \
+          -d "s=${{ secrets.SUCURI_API_SECRET }}" \
+          -d "a=update_setting" \
+          -d "update_geo_blocking=1"
